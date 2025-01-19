@@ -1,7 +1,7 @@
 package api
 
 import (
-	"encoding/json"
+	"fmt"
 	"log/slog"
 	"math/rand"
 	"net/http"
@@ -9,13 +9,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// API holds dependencies for API handlers
+// API holds dependencies for API handlers and allows for registration of routes.
 type API struct {
 	logger *slog.Logger
 	rnd    *rand.Rand
 }
 
-// New creates a new API object
+// New creates a new API object.
 func New(logger *slog.Logger, rnd *rand.Rand) *API {
 	return &API{
 		logger: logger.With("component", "api_handler"),
@@ -30,7 +30,7 @@ func (h *API) RegisterRoutes(mux *mux.Router) {
 	mux.HandleFunc("/api/v1/health", withCORS(h.handleHealth()))
 
 	// Roll a dice!
-	mux.HandleFunc("/api/v1/roll", h.handleRoll())
+	mux.HandleFunc("/api/v1/roll", withCORS(h.handleRoll()))
 
 }
 
@@ -39,17 +39,19 @@ func (h *API) handleHealth() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h.logger.Info("health check requested")
 
-		respondJSON(w, http.StatusOK, map[string]string{
-			"status": "healthy",
-		})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status": "healthy"}`))
 	}
 }
 
 func (h *API) handleRoll() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		respondJSON(w, http.StatusOK, map[string]interface{}{
-			"result": h.rnd.Intn(6),
-		})
+		h.logger.Info("roll endpoint requested")
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(fmt.Sprintf(`{"result": %d}`, h.rnd.Intn(6))))
 	}
 }
 
@@ -68,18 +70,4 @@ func withCORS(next http.HandlerFunc) http.HandlerFunc {
 
 		next(w, r)
 	}
-}
-
-// respondJSON is a helper to send JSON responses
-func respondJSON(w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-	}
-}
-
-// respondError is a helper to send error responses
-func respondError(w http.ResponseWriter, status int, message string) {
-	respondJSON(w, status, map[string]string{"error": message})
 }

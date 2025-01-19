@@ -26,6 +26,7 @@ func main() {
 	api.RegisterRoutes(r)
 
 	// Configure the server
+	// TODO(@tpaschalis) Expose more of the settings via a config file or env vars.
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: r,
@@ -52,5 +53,4 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Error("server shutdown error", "error", err)
 	}
-
 }
