@@ -14,6 +14,25 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// corsMiddleware adds CORS headers to the response.
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Handle preflight request
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		// Proceed to the next handler
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	// Initialize logger with appropriate level
 	// TODO(@tpaschalis) Make log level configurable
@@ -22,6 +41,10 @@ func main() {
 	slog.SetDefault(logger)
 
 	r := mux.NewRouter()
+
+	// Attach CORS middleware
+    r.Use(corsMiddleware)
+
 	api := api.New(logger, rand.New(rand.NewSource(time.Now().UTC().UnixNano())))
 	api.RegisterRoutes(r)
 
