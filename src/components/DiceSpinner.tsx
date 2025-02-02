@@ -10,23 +10,16 @@ const DiceSpinner = () => {
 
 
     const rollDice = async () => {
-        setRolling(true); // Start rolling animation
-        setResult(null); // Clear the previous result
+        // Start the rolling animation
+        setRolling(true);
 
-        try {
-            // Call the API to roll the dice
-            const response = await axios.get<{ result: number }>("roll");
-            const randomNumber = response.data.result; // Get the result from the response
-
-            // Simulate rolling animation before displaying the result
-            setTimeout(() => {
-                setResult(randomNumber.toString()); // Set the result
-                setRolling(false); // Stop rolling animation
-            }, 2000);
-        } catch (error) {
-            console.error("Error fetching dice roll:", error);
-            setRolling(false); // Stop rolling even if the API fails
-        }
+        // Simulate rolling the dice by waiting a little
+        setTimeout(() => {
+            // Generate a random number from 1 to 6
+            const randomNumber = Math.floor(Math.random() * 6) + 1;
+            setResult(randomNumber.toString());
+            setRolling(false);  // Stop the rolling animation
+        }, 1000);  // 1 second delay for the rolling effect
     };
 
     return (
