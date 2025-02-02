@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import styles from "./DiceSpinner.module.css";
-import axios from "@/lib/axios";
 
 const DiceSpinner = () => {
     const [rolling, setRolling] = useState(false);
